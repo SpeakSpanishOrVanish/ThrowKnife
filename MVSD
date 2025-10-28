@@ -1,0 +1,47 @@
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DraggableEButtonGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("CoreGui")
+
+-- Create main frame (draggable box)
+local frame = Instance.new("Frame")
+frame.Name = "DraggableBox"
+frame.Size = UDim2.new(0, 50, 0, 50)
+frame.Position = UDim2.new(0.5, -25, 0.5, -45)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+frame.Active = true
+frame.Draggable = true
+
+-- Create button inside frame
+local button = Instance.new("TextButton")
+button.Name = "EButton"
+button.Size = UDim2.new(0, 40, 0, 40)
+button.Position = UDim2.new(0.5, -20, 0.5, -20)
+button.BackgroundTransparency = 1
+button.BorderSizePixel = 0
+button.Text = "E"
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.SourceSansBold
+button.TextScaled = true
+button.Parent = frame
+
+-- Function to simulate pressing the "E" key
+local function pressEKey()
+    -- VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- key down
+    -- VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- key up
+
+    -- Some executors require this method:
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end)
+end
+
+button.MouseButton1Click:Connect(pressEKey)
