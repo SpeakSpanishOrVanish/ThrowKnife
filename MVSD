@@ -1,47 +1,233 @@
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
+-- Delta Auto-Aim Throw Button for [DUELS] Murderers vs Sheriffs
+-- Game ID: 135856908115931
 
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DraggableEButtonGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = game:GetService("CoreGui")
-
--- Create main frame (draggable box)
-local frame = Instance.new("Frame")
-frame.Name = "DraggableBox"
-frame.Size = UDim2.new(0, 50, 0, 50)
-frame.Position = UDim2.new(0.5, -25, 0.5, -45)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
-frame.Active = true
-frame.Draggable = true
-
--- Create button inside frame
-local button = Instance.new("TextButton")
-button.Name = "EButton"
-button.Size = UDim2.new(0, 40, 0, 40)
-button.Position = UDim2.new(0.5, -20, 0.5, -20)
-button.BackgroundTransparency = 1
-button.BorderSizePixel = 0
-button.Text = "E"
-button.TextColor3 = Color3.new(1, 1, 1)
-button.Font = Enum.Font.SourceSansBold
-button.TextScaled = true
-button.Parent = frame
-
--- Function to simulate pressing the "E" key
-local function pressEKey()
-    -- VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- key down
-    -- VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- key up
-
-    -- Some executors require this method:
-    pcall(function()
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+if not _G.AutoAimThrow then
+    _G.AutoAimThrow = true
+    
+    local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+    local player = Players.LocalPlayer
+    
+    -- Create the throw button GUI
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AutoAimThrowGUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local throwButton = Instance.new("TextButton")
+    throwButton.Name = "ThrowButton"
+    throwButton.Size = UDim2.new(0, 80, 0, 80)
+    throwButton.Position = UDim2.new(0.8, 0, 0.7, 0)
+    throwButton.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
+    throwButton.BackgroundTransparency = 0.3
+    throwButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    throwButton.Text = "AUTO\nAIM"
+    throwButton.TextScaled = true
+    throwButton.Font = Enum.Font.GothamBold
+    throwButton.BorderSizePixel = 0
+    throwButton.ZIndex = 10
+    throwButton.Visible = false
+    
+    -- Add corner rounding
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0.2, 0)
+    corner.Parent = throwButton
+    
+    -- Add shadow
+    local shadow = Instance.new("UIStroke")
+    shadow.Color = Color3.fromRGB(0, 0, 0)
+    shadow.Thickness = 2
+    shadow.Transparency = 0.7
+    shadow.Parent = throwButton
+    
+    throwButton.Parent = screenGui
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+    
+    -- Dragging variables
+    local isDragging = false
+    local dragInput, dragStart, startPos
+    
+    -- Function to find closest enemy player
+    local function findClosestEnemy()
+        local character = player.Character
+        if not character then return nil end
+        
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then return nil end
+        
+        local closestPlayer = nil
+        local closestDistance = math.huge
+        
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    local distance = (humanoidRootPart.Position - otherRoot.Position).Magnitude
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = otherPlayer
+                    end
+                end
+            end
+        end
+        
+        return closestPlayer, closestDistance
+    end
+    
+    -- AUTO-AIM THROW FUNCTION
+    local function autoAimThrow()
+        local character = player.Character
+        if not character then return end
+        
+        local backpack = player:FindFirstChild("Backpack")
+        if not backpack then return end
+        
+        -- Find the BasicSai tool
+        local knifeTool = backpack:FindFirstChild("BasicSai")
+        if not knifeTool then
+            -- Try to find any knife tool
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Throw") then
+                    knifeTool = tool
+                    break
+                end
+            end
+        end
+        
+        if knifeTool then
+            local throwRemote = knifeTool:FindFirstChild("Throw")
+            local activateThrowing = knifeTool:FindFirstChild("ActivateThrowing")
+            
+            if throwRemote and throwRemote:IsA("RemoteEvent") then
+                -- Get character position
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if not humanoidRootPart then return end
+                
+                local myPosition = humanoidRootPart.Position
+                
+                -- Find closest enemy for auto-aim
+                local closestEnemy, distance = findClosestEnemy()
+                local targetPosition
+                
+                if closestEnemy and closestEnemy.Character and distance < 100 then
+                    -- AUTO-AIM: Throw at enemy
+                    local enemyRoot = closestEnemy.Character:FindFirstChild("HumanoidRootPart")
+                    if enemyRoot then
+                        targetPosition = enemyRoot.Position
+                        print("🎯 Auto-aiming at: " .. closestEnemy.Name .. " (" .. math.floor(distance) .. " studs away)")
+                    else
+                        -- Throw forward if no enemy root part
+                        targetPosition = myPosition + (humanoidRootPart.CFrame.LookVector * 50)
+                    end
+                else
+                    -- Throw forward if no enemy found
+                    targetPosition = myPosition + (humanoidRootPart.CFrame.LookVector * 50)
+                    print("➡️ Throwing forward (no enemy in range)")
+                end
+                
+                -- Calculate throw direction
+                local targetCFrame = CFrame.new(myPosition, targetPosition)
+                
+                -- Fire the Throw remote with auto-aim direction
+                throwRemote:FireServer(targetCFrame, targetPosition)
+                
+                -- Also fire ActivateThrowing if it exists
+                if activateThrowing and activateThrowing:IsA("BindableEvent") then
+                    local throwingKnife = character:FindFirstChild("ThrowingKnife") or knifeTool
+                    local target = closestEnemy or nil
+                    
+                    activateThrowing:Fire(throwingKnife, target)
+                end
+                
+                -- Visual feedback
+                throwButton.BackgroundColor3 = Color3.fromRGB(50, 200, 255)
+                task.wait(0.2)
+                throwButton.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
+                
+                print("✅ Auto-aim throw launched!")
+            else
+                print("❌ No throw remote found in tool")
+            end
+        else
+            print("❌ No knife tool found")
+        end
+    end
+    
+    -- Dragging functionality
+    local function update(input)
+        local delta = input.Position - dragStart
+        throwButton.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X, 
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    throwButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            dragStart = input.Position
+            startPos = throwButton.Position
+            
+            -- Bring to front
+            throwButton.ZIndex = 11
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                    throwButton.ZIndex = 10
+                end
+            end)
+        end
     end)
+    
+    throwButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and isDragging then
+            update(input)
+        end
+    end)
+    
+    -- Throw when button is released (tap, not drag)
+    throwButton.InputEnded:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and not isDragging then
+            autoAimThrow()
+        end
+        isDragging = false
+        throwButton.ZIndex = 10
+    end)
+    
+    -- Auto show/hide when knife is equipped
+    local function checkKnife()
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                local tool = humanoid:GetEquippedTool()
+                if tool and tool:FindFirstChild("Throw") then
+                    throwButton.Visible = true
+                    return
+                end
+            end
+        end
+        throwButton.Visible = false
+    end
+    
+    -- Check every second
+    while true do
+        checkKnife()
+        task.wait(1)
+    end
+    
+    print("🎯 Auto-Aim throw button loaded!")
+    print("• Drag to move | Tap to throw")
+    print("• Automatically aims at closest enemy")
+    print("• Still requires knife to hit for kill")
 end
-
-button.MouseButton1Click:Connect(pressEKey)
