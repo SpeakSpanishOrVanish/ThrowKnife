@@ -1,118 +1,49 @@
--- DEBUG Throw Button - Find the Exact Problem
-if not _G.DebugThrow then
-    _G.DebugThrow = true
+-- STEALTH Throw Button - Bypass Anti-Cheat
+if not _G.StealthThrow then
+    _G.StealthThrow = true
     
     local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
     local player = Players.LocalPlayer
     
-    -- Create button
+    -- Create invisible button (stealth mode)
     local gui = Instance.new("ScreenGui")
-    gui.Name = "DebugThrowGUI"
+    gui.Name = "StealthThrowGUI"
     gui.ResetOnSpawn = false
     
     local button = Instance.new("TextButton")
     button.Name = "ThrowBtn"
-    button.Size = UDim2.new(0, 100, 0, 100)
-    button.Position = UDim2.new(0.8, 0, 0.7, 0)
-    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    button.Text = "DEBUG"
+    button.Size = UDim2.new(0, 60, 0, 60)
+    button.Position = UDim2.new(0.85, 0, 0.75, 0)
+    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Camouflage color
+    button.BackgroundTransparency = 0.7 -- Semi-transparent
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Text = "🎯"
     button.TextScaled = true
     button.Visible = true
     
     button.Parent = gui
     gui.Parent = player:WaitForChild("PlayerGui")
     
+    -- STEALTH THROW: Simulate key press instead of direct remote
     button.MouseButton1Click:Connect(function()
-        print(" ")
-        print("=== DEBUG THROW ATTEMPT ===")
+        -- METHOD 1: Simulate pressing "E" key (like normal throw)
+        local virtualInput = game:GetService("VirtualInputManager")
         
-        -- Check 1: Player
-        print("1. Player:", player.Name)
+        -- Press and release E key (stealth approach)
+        virtualInput:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        wait(0.05)
+        virtualInput:SendKeyEvent(false, Enum.KeyCode.E, false, game)
         
-        -- Check 2: Character
-        local character = player.Character
-        if character then
-            print("2. Character: FOUND")
-            
-            -- Check 3: HumanoidRootPart
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                print("3. HumanoidRootPart: FOUND")
-            else
-                print("3. HumanoidRootPart: MISSING")
-            end
-        else
-            print("2. Character: MISSING")
-        end
+        print("🎯 Stealth throw attempted (E key simulation)")
         
-        -- Check 4: Backpack
-        local backpack = player:FindFirstChild("Backpack")
-        if backpack then
-            print("4. Backpack: FOUND")
-            print("   Items in backpack:")
-            
-            -- Check 5: Tools in backpack
-            local hasTools = false
-            for _, item in pairs(backpack:GetChildren()) do
-                print("   - " .. item.Name .. " (" .. item.ClassName .. ")")
-                if item:IsA("Tool") then
-                    hasTools = true
-                    
-                    -- Check 6: Throw remote in tool
-                    local throwRemote = item:FindFirstChild("Throw")
-                    if throwRemote then
-                        print("   🎯 THROW REMOTE FOUND IN: " .. item.Name)
-                    else
-                        print("   ❌ No Throw remote in: " .. item.Name)
-                        print("   Tool contents:")
-                        for _, child in pairs(item:GetChildren()) do
-                            print("     * " .. child.Name .. " (" .. child.ClassName .. ")")
-                        end
-                    end
-                end
-            end
-            
-            if not hasTools then
-                print("   ❌ NO TOOLS IN BACKPACK")
-            end
-        else
-            print("4. Backpack: MISSING")
-        end
-        
-        print("=== DEBUG END ===")
-        print(" ")
-        
-        -- Try to throw anyway
-        if backpack then
-            for _, tool in pairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                    local throwRemote = tool:FindFirstChild("Throw")
-                    if throwRemote then
-                        local character = player.Character
-                        if character then
-                            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                            if humanoidRootPart then
-                                local pos = humanoidRootPart.Position
-                                local look = humanoidRootPart.CFrame.LookVector
-                                local targetPos = pos + (look * 50)
-                                
-                                throwRemote:FireServer(
-                                    CFrame.new(pos, targetPos),
-                                    targetPos
-                                )
-                                print("🔥 THROW ATTEMPTED!")
-                                button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                                return
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        
-        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        -- Visual feedback
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        wait(0.3)
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     end)
     
-    print("🔧 DEBUG button loaded! Click it and check the console!")
+    print("🎯 STEALTH throw button loaded!")
+    print("• Uses E key simulation to bypass anti-cheat")
+    print("• Should not unequip your knife")
 end
