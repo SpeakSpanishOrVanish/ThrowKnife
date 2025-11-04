@@ -1,49 +1,36 @@
--- STEALTH Throw Button - Bypass Anti-Cheat
-if not _G.StealthThrow then
-    _G.StealthThrow = true
+-- ULTRA STEALTH - Tap anywhere to throw
+if not _G.UltraStealth then
+    _G.UltraStealth = true
     
     local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local player = Players.LocalPlayer
     
-    -- Create invisible button (stealth mode)
+    -- Invisible full-screen button
     local gui = Instance.new("ScreenGui")
-    gui.Name = "StealthThrowGUI"
+    gui.Name = "UltraStealthGUI"
     gui.ResetOnSpawn = false
     
     local button = Instance.new("TextButton")
-    button.Name = "ThrowBtn"
-    button.Size = UDim2.new(0, 60, 0, 60)
-    button.Position = UDim2.new(0.85, 0, 0.75, 0)
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Camouflage color
-    button.BackgroundTransparency = 0.7 -- Semi-transparent
+    button.Name = "ThrowZone"
+    button.Size = UDim2.new(0, 100, 0, 100)
+    button.Position = UDim2.new(0.8, 0, 0.7, 0)
+    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    button.BackgroundTransparency = 0.8
+    button.Text = "TAP\nZONE"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Text = "🎯"
     button.TextScaled = true
     button.Visible = true
     
     button.Parent = gui
     gui.Parent = player:WaitForChild("PlayerGui")
     
-    -- STEALTH THROW: Simulate key press instead of direct remote
     button.MouseButton1Click:Connect(function()
-        -- METHOD 1: Simulate pressing "E" key (like normal throw)
-        local virtualInput = game:GetService("VirtualInputManager")
-        
-        -- Press and release E key (stealth approach)
-        virtualInput:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-        wait(0.05)
-        virtualInput:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-        
-        print("🎯 Stealth throw attempted (E key simulation)")
-        
-        -- Visual feedback
-        button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        wait(0.3)
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        -- Just press E key (exactly what mobile throw button does)
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        wait(0.03)
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
     end)
     
-    print("🎯 STEALTH throw button loaded!")
-    print("• Uses E key simulation to bypass anti-cheat")
-    print("• Should not unequip your knife")
+    print("🎯 ULTRA STEALTH: Tap the red zone to throw (E key simulation)")
 end
