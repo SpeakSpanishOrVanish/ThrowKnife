@@ -1,112 +1,118 @@
--- Fixed Throw Button - Works in Lobby & Game
-if not _G.LobbyThrow then
-    _G.LobbyThrow = true
+-- DEBUG Throw Button - Find the Exact Problem
+if not _G.DebugThrow then
+    _G.DebugThrow = true
     
     local Players = game:GetService("Players")
     local player = Players.LocalPlayer
     
     -- Create button
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LobbyThrowGUI"
+    gui.Name = "DebugThrowGUI"
     gui.ResetOnSpawn = false
     
     local button = Instance.new("TextButton")
     button.Name = "ThrowBtn"
-    button.Size = UDim2.new(0, 80, 0, 80)
+    button.Size = UDim2.new(0, 100, 0, 100)
     button.Position = UDim2.new(0.8, 0, 0.7, 0)
-    button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    button.BackgroundTransparency = 0.3
+    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    button.Text = "DEBUG"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Text = "THROW"
     button.TextScaled = true
-    button.Font = Enum.Font.GothamBold
-    button.BorderSizePixel = 0
-    button.Visible = true  -- Always visible, but shows status
-    
-    -- Make it look nice
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0.2, 0)
-    corner.Parent = button
-    
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 0, 0)
-    stroke.Thickness = 2
-    stroke.Parent = button
+    button.Visible = true
     
     button.Parent = gui
     gui.Parent = player:WaitForChild("PlayerGui")
     
-    -- Throw function
-    local function throwKnife()
+    button.MouseButton1Click:Connect(function()
+        print(" ")
+        print("=== DEBUG THROW ATTEMPT ===")
+        
+        -- Check 1: Player
+        print("1. Player:", player.Name)
+        
+        -- Check 2: Character
         local character = player.Character
-        if not character then 
-            button.Text = "NO CHAR"
-            return 
+        if character then
+            print("2. Character: FOUND")
+            
+            -- Check 3: HumanoidRootPart
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                print("3. HumanoidRootPart: FOUND")
+            else
+                print("3. HumanoidRootPart: MISSING")
+            end
+        else
+            print("2. Character: MISSING")
         end
         
+        -- Check 4: Backpack
         local backpack = player:FindFirstChild("Backpack")
-        if not backpack then 
-            button.Text = "NO BAG"
-            return 
+        if backpack then
+            print("4. Backpack: FOUND")
+            print("   Items in backpack:")
+            
+            -- Check 5: Tools in backpack
+            local hasTools = false
+            for _, item in pairs(backpack:GetChildren()) do
+                print("   - " .. item.Name .. " (" .. item.ClassName .. ")")
+                if item:IsA("Tool") then
+                    hasTools = true
+                    
+                    -- Check 6: Throw remote in tool
+                    local throwRemote = item:FindFirstChild("Throw")
+                    if throwRemote then
+                        print("   🎯 THROW REMOTE FOUND IN: " .. item.Name)
+                    else
+                        print("   ❌ No Throw remote in: " .. item.Name)
+                        print("   Tool contents:")
+                        for _, child in pairs(item:GetChildren()) do
+                            print("     * " .. child.Name .. " (" .. child.ClassName .. ")")
+                        end
+                    end
+                end
+            end
+            
+            if not hasTools then
+                print("   ❌ NO TOOLS IN BACKPACK")
+            end
+        else
+            print("4. Backpack: MISSING")
         end
         
-        local knifeFound = false
+        print("=== DEBUG END ===")
+        print(" ")
         
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                local throwRemote = tool:FindFirstChild("Throw")
-                if throwRemote then
-                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                    if humanoidRootPart then
-                        local pos = humanoidRootPart.Position
-                        local look = humanoidRootPart.CFrame.LookVector
-                        local targetPos = pos + (look * 50)
-                        
-                        throwRemote:FireServer(
-                            CFrame.new(pos, targetPos),
-                            targetPos
-                        )
-                        print("✅ Knife thrown!")
-                        knifeFound = true
-                        button.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-                        task.wait(0.3)
-                        button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        -- Try to throw anyway
+        if backpack then
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    local throwRemote = tool:FindFirstChild("Throw")
+                    if throwRemote then
+                        local character = player.Character
+                        if character then
+                            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                            if humanoidRootPart then
+                                local pos = humanoidRootPart.Position
+                                local look = humanoidRootPart.CFrame.LookVector
+                                local targetPos = pos + (look * 50)
+                                
+                                throwRemote:FireServer(
+                                    CFrame.new(pos, targetPos),
+                                    targetPos
+                                )
+                                print("🔥 THROW ATTEMPTED!")
+                                button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                                return
+                            end
+                        end
                     end
                 end
             end
         end
         
-        if not knifeFound then
-            button.Text = "NO KNIFE"
-            task.wait(1)
-            button.Text = "THROW"
-        end
-    end
+        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end)
     
-    button.MouseButton1Click:Connect(throwKnife)
-    
-    -- Update button status
-    while true do
-        task.wait(2)
-        local backpack = player:FindFirstChild("Backpack")
-        if backpack then
-            local hasKnife = false
-            for _, tool in pairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") and tool:FindFirstChild("Throw") then
-                    hasKnife = true
-                    break
-                end
-            end
-            
-            if hasKnife then
-                button.Text = "THROW"
-                button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-            else
-                button.Text = "LOBBY"
-                button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-            end
-        end
-    end
-    
-    print("🎯 Throw button loaded! Join a game to get knives!")
+    print("🔧 DEBUG button loaded! Click it and check the console!")
 end
