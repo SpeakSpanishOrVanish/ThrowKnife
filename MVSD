@@ -1,36 +1,18 @@
--- ULTRA STEALTH - Tap anywhere to throw
-if not _G.UltraStealth then
-    _G.UltraStealth = true
-    
-    local Players = game:GetService("Players")
-    local UserInputService = game:GetService("UserInputService")
-    local player = Players.LocalPlayer
-    
-    -- Invisible full-screen button
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "UltraStealthGUI"
-    gui.ResetOnSpawn = false
-    
-    local button = Instance.new("TextButton")
-    button.Name = "ThrowZone"
-    button.Size = UDim2.new(0, 100, 0, 100)
-    button.Position = UDim2.new(0.8, 0, 0.7, 0)
-    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    button.BackgroundTransparency = 0.8
-    button.Text = "TAP\nZONE"
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextScaled = true
-    button.Visible = true
-    
-    button.Parent = gui
-    gui.Parent = player:WaitForChild("PlayerGui")
-    
-    button.MouseButton1Click:Connect(function()
-        -- Just press E key (exactly what mobile throw button does)
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
-        wait(0.03)
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
-    end)
-    
-    print("🎯 ULTRA STEALTH: Tap the red zone to throw (E key simulation)")
+-- URGENT: What's in your backpack RIGHT NOW?
+local player = game.Players.LocalPlayer
+local backpack = player:FindFirstChild("Backpack")
+
+print("=== BACKPACK SCAN ===")
+if backpack then
+    for _, item in pairs(backpack:GetChildren()) do
+        print("ITEM: " .. item.Name .. " (" .. item.ClassName .. ")")
+        if item:IsA("Tool") then
+            for _, child in pairs(item:GetChildren()) do
+                print("  -> " .. child.Name .. " (" .. child.ClassName .. ")")
+            end
+        end
+    end
+else
+    print("NO BACKPACK FOUND")
 end
+print("=====================")
